@@ -77,9 +77,21 @@ internal abstract class RequestHandler : IRequestHandler
     {
         Context = context;
         Store = store;
-        
-        var requestUri = context.Request.Path.ToUri();
-        var parentUri = requestUri.GetParent();
+
+        String? query = context.Request.QueryString.Value;
+
+        var requestUri = context.Request.Path.ToUri(query);
+
+        Uri parentUri;
+
+        if (requestUri.IsAbsoluteUri)
+        {
+            parentUri = requestUri.GetParent();
+        }
+        else
+        {
+            parentUri = new Uri(new Uri("file://"), requestUri);
+        }
         
         var collection = await store.GetCollectionAsync(parentUri, cancellationToken);
         if (collection == null)
