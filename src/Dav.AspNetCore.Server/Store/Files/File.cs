@@ -30,7 +30,7 @@ public class File : IStoreItem
     /// <summary>
     /// Gets the uri.
     /// </summary>
-    public Uri Uri => properties.Uri;
+    public WebDavPath Uri => properties.Uri;
 
     /// <summary>
     /// Gets a readable stream async.
@@ -98,7 +98,7 @@ public class File : IStoreItem
             : ItemResult.Created(result.Item);
     }
     
-    private static string GetMimeTypeForFileExtension(Uri uri)
+    private static string GetMimeTypeForFileExtension(WebDavPath uri)
     {
         var provider = new FileExtensionContentTypeProvider();
         if (!provider.TryGetContentType(uri.AbsolutePath, out var contentType))
@@ -111,7 +111,7 @@ public class File : IStoreItem
     
     private static async Task<string> ComputeEtagAsync(
         FileStore store,
-        Uri uri, 
+        WebDavPath uri, 
         CancellationToken cancellationToken = default)
     {
         await using var fileStream = await store.OpenFileStreamAsync(uri, OpenFileMode.Read, cancellationToken);

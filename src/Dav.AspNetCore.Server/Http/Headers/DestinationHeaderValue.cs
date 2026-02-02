@@ -9,7 +9,7 @@ public class DestinationHeaderValue
     /// Initializes a new <see cref="DestinationHeaderValue"/> class.
     /// </summary>
     /// <param name="destination">The destination.</param>
-    public DestinationHeaderValue(Uri destination)
+    public DestinationHeaderValue(WebDavPath destination)
     {
         ArgumentNullException.ThrowIfNull(destination, nameof(destination));
         Destination = destination;
@@ -18,7 +18,7 @@ public class DestinationHeaderValue
     /// <summary>
     /// Gets the destination uri.
     /// </summary>
-    public Uri Destination { get; }
+    public WebDavPath Destination { get; }
     
     /// <summary>
     /// Parses the input.
@@ -50,14 +50,14 @@ public class DestinationHeaderValue
         if (Uri.TryCreate(input, UriKind.Absolute, out var uri))
         {
             var pathString = new PathString(uri.LocalPath);
-            parsedValue = new DestinationHeaderValue(pathString.ToUri());
+            parsedValue = new DestinationHeaderValue(WebDavPath.FromUri(pathString.ToUri()));
             return true;
         }
 
         if(!input.StartsWith("/") && Uri.TryCreate($"/{input}", UriKind.Absolute, out var uri2))
         {
             var pathString = new PathString(uri2.LocalPath);
-            parsedValue = new DestinationHeaderValue(pathString.ToUri());
+            parsedValue = new DestinationHeaderValue(WebDavPath.FromUri(pathString.ToUri()));
             return true;
         }
 

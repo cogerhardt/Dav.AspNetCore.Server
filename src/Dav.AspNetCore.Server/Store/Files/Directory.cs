@@ -31,7 +31,7 @@ public class Directory : IStoreCollection
     /// <summary>
     /// Gets the uri.
     /// </summary>
-    public Uri Uri => properties.Uri;
+    public WebDavPath Uri => properties.Uri;
 
     /// <summary>
     /// Gets a readable stream async.
@@ -81,7 +81,7 @@ public class Directory : IStoreCollection
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The store item or null.</returns>
     public Task<IStoreItem?> GetItemAsync(string name, CancellationToken cancellationToken = default) 
-        => store.GetItemAsync(UriHelper.Combine(properties.Uri, name), cancellationToken);
+        => store.GetItemAsync(WebDavPath.Combine(properties.Uri, name), cancellationToken);
 
     /// <summary>
     /// Gets the store items async.
@@ -134,7 +134,7 @@ public class Directory : IStoreCollection
         if (item != null)
             return CollectionResult.Fail(DavStatusCode.NotAllowed);
         
-        var uri = UriHelper.Combine(properties.Uri, name);
+        var uri = WebDavPath.Combine(properties.Uri, name);
         await store.CreateDirectoryAsync(uri, cancellationToken);
         
         var directoryProperties = await store.GetDirectoryPropertiesAsync(uri, cancellationToken);
@@ -149,7 +149,7 @@ public class Directory : IStoreCollection
         string name, 
         CancellationToken cancellationToken = default)
     {
-        var uri = UriHelper.Combine(properties.Uri, name);
+        var uri = WebDavPath.Combine(properties.Uri, name);
         await (await store.OpenFileStreamAsync(uri, OpenFileMode.Write, cancellationToken)).DisposeAsync();
         
         var fileProperties = await store.GetFilePropertiesAsync(uri, cancellationToken);
@@ -197,7 +197,7 @@ public class Directory : IStoreCollection
         string name, 
         CancellationToken cancellationToken = default)
     {
-        var uri = UriHelper.Combine(properties.Uri, name);
+        var uri = WebDavPath.Combine(properties.Uri, name);
 
         try
         {

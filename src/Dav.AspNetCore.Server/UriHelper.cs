@@ -1,6 +1,6 @@
 namespace Dav.AspNetCore.Server;
 
-internal static class UriHelper
+public static class UriHelper
 {
     public static Uri GetParent(this Uri uri)
     {
@@ -15,7 +15,7 @@ internal static class UriHelper
             uriString += uri.Segments[i];
         }
 
-        return new Uri(uriString);
+        return new Uri($"{uri.Scheme}://{uriString}");
     }
 
     public static Uri Combine(Uri uri, string path)
@@ -52,6 +52,6 @@ internal static class UriHelper
         if (string.IsNullOrWhiteSpace(relativePath))
             return new Uri("/");
         
-        return new Uri(relativePath);
+        return new Uri(relativePath,UriKind.Relative);
     }
 }

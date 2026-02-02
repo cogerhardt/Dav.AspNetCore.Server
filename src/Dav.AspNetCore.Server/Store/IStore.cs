@@ -9,6 +9,6 @@ public interface IStore
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The store item or null.</returns>
     Task<IStoreItem?> GetItemAsync(
-        Uri uri,
+        WebDavPath uri,
         CancellationToken cancellationToken = default);
 }

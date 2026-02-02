@@ -3,6 +3,6 @@ using System.Xml.Linq;
 namespace Dav.AspNetCore.Server;
 
 internal record WebDavError(
-    Uri Uri,
+    WebDavPath Uri,
     DavStatusCode StatusCode,
     XElement? ErrorElement);

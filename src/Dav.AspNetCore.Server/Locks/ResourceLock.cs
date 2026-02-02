@@ -14,7 +14,7 @@ namespace Dav.AspNetCore.Server.Locks;
 /// <param name="IssueDate">The lock issue date.</param>
 public record ResourceLock(
     Uri Id,
-    Uri Uri,
+    WebDavPath Uri,
     LockType LockType,
     XElement Owner,
     bool Recursive,

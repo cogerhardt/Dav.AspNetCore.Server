@@ -32,7 +32,7 @@ internal class MoveHandler : RequestHandler
         if (!string.IsNullOrWhiteSpace(Context.Request.PathBase))
         {
             if (Context.Request.PathBase.HasValue)
-                destination = new Uri(destination.LocalPath.Substring(Context.Request.PathBase.Value.Length));
+                destination = WebDavPath.FromString(destination.LocalPath.Substring(Context.Request.PathBase.Value.Length));
         }
         
         var overwrite = WebDavHeaders.Overwrite ?? false;
@@ -45,7 +45,7 @@ internal class MoveHandler : RequestHandler
             return;
         }
 
-        var destinationItemName = destination.GetRelativeUri(destinationParentUri).LocalPath.Trim('/');
+        var destinationItemName = destination.GetRelativePath(destinationParentUri).LocalPath.Trim('/');
         var destinationItem = await Store.GetItemAsync(destination, cancellationToken);
         if (destinationItem != null && !overwrite)
         {
@@ -105,7 +105,7 @@ internal class MoveHandler : RequestHandler
         ICollection<WebDavError> errors,
         CancellationToken cancellationToken = default)
     {
-        var destinationUri = UriHelper.Combine(destination.Uri, name);
+        var destinationUri = WebDavPath.Combine(destination.Uri, name);
         var isLocked = await CheckLockedAsync(destinationUri, cancellationToken);
         if (isLocked)
         {
@@ -145,7 +145,7 @@ internal class MoveHandler : RequestHandler
                 if (destinationMove == null)
                     throw new InvalidOperationException("If the copied item is a collection, the copy result must also be a collection.");
                 
-                var subItemName = subItem.Uri.GetRelativeUri(collectionToMove.Uri).LocalPath.Trim('/');
+                var subItemName = subItem.Uri.GetRelativePath(collectionToMove.Uri).LocalPath.Trim('/');
                 var error = await MoveItemRecursiveAsync(collectionToMove, subItem, destinationMove, subItemName, errors, cancellationToken);
                 if (!error)
                     subItemError = true;
@@ -155,11 +155,11 @@ internal class MoveHandler : RequestHandler
                 return false;
         }
         
-        var itemName = item.Uri.GetRelativeUri(collection.Uri).LocalPath.Trim('/');
+        var itemName = item.Uri.GetRelativePath(collection.Uri).LocalPath.Trim('/');
         var status = await collection.DeleteItemAsync(itemName, cancellationToken);
         if (status != DavStatusCode.NoContent)
         {
-            errors.Add(new WebDavError(UriHelper.Combine(collection.Uri, itemName), status, null));
+            errors.Add(new WebDavError(WebDavPath.Combine(collection.Uri, itemName), status, null));
             return false;
         }
 

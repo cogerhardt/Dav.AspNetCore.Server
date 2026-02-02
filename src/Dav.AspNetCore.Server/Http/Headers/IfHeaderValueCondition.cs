@@ -7,6 +7,6 @@ namespace Dav.AspNetCore.Server.Http.Headers;
 /// <param name="Tokens">The list of state tokens.</param>
 /// <param name="Tags">The list of etags.</param>
 public record IfHeaderValueCondition(
-    Uri? Uri,
+    WebDavPath? Uri,
     IfHeaderValueStateToken[] Tokens,
     IfHeaderValueEntityTag[] Tags);

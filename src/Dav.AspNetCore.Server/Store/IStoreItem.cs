@@ -5,7 +5,7 @@ public interface IStoreItem
     /// <summary>
     /// Gets the uri.
     /// </summary>
-    Uri Uri { get; }
+    WebDavPath Uri { get; }
 
     /// <summary>
     /// Gets a readable stream async.

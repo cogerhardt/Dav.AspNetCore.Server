@@ -11,7 +11,7 @@ namespace Dav.AspNetCore.Server.Handlers;
 
 internal abstract class RequestHandler : IRequestHandler
 {
-    private readonly Dictionary<Uri, IReadOnlyCollection<ResourceLock>> lockCache = new();
+    private readonly Dictionary<WebDavPath, IReadOnlyCollection<ResourceLock>> lockCache = new();
     private IPropertyStore? propertyStore;
 
     private static readonly List<string> SkipLockValidation = new()
@@ -80,17 +80,21 @@ internal abstract class RequestHandler : IRequestHandler
 
         String? query = context.Request.QueryString.Value;
 
-        var requestUri = context.Request.Path.ToUri(query);
+        //var requestUri = context.Request.Path.ToUri(query);
+        //var requestUri = new Uri(new Uri("file://"), context.Request.Path.ToUri(query));
 
-        Uri parentUri;
+        WebDavPath requestUrl = WebDavPath.FromUri(context.Request.Path.ToUri(query));
 
-        if (requestUri.IsAbsoluteUri)
+
+        WebDavPath parentUri;
+
+        if (requestUrl.IsAbsolutePath)
         {
-            parentUri = requestUri.GetParent();
+            parentUri = requestUrl.GetParent();
         }
         else
         {
-            parentUri = new Uri(new Uri("file://"), requestUri);
+            parentUri = requestUrl;
         }
         
         var collection = await store.GetCollectionAsync(parentUri, cancellationToken);
@@ -108,13 +112,13 @@ internal abstract class RequestHandler : IRequestHandler
 
         propertyStore = Context.RequestServices.GetService<IPropertyStore>();
 
-        if (requestUri == parentUri)
+        if (requestUrl == parentUri)
         {
             Item = collection;
         }
         else
         {
-            var itemName = requestUri.GetRelativeUri(Collection.Uri).LocalPath.Trim('/');
+            var itemName = requestUrl.GetRelativePath(Collection.Uri).LocalPath.Trim('/');
             Item = await collection.GetItemAsync(itemName, cancellationToken);
         }
 
@@ -124,13 +128,13 @@ internal abstract class RequestHandler : IRequestHandler
 
         if (!SkipLockValidation.Contains(Context.Request.Method))
         {
-            var locked = await CheckLockedAsync(requestUri, cancellationToken);
+            var locked = await CheckLockedAsync(requestUrl, cancellationToken);
             if (locked)
             {
-                var tokenSubmitted = await ValidateTokenAsync(requestUri, cancellationToken);
+                var tokenSubmitted = await ValidateTokenAsync(requestUrl, cancellationToken);
                 if (!tokenSubmitted)
                 {
-                    await Context.SendLockedAsync(requestUri, cancellationToken);
+                    await Context.SendLockedAsync(requestUrl, cancellationToken);
                     return;
                 }
             }   
@@ -148,7 +152,7 @@ internal abstract class RequestHandler : IRequestHandler
     /// <param name="uri">The uri.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True when the uri is locked, otherwise false.</returns>
-    protected virtual async ValueTask<bool> CheckLockedAsync(Uri uri, CancellationToken cancellationToken = default)
+    protected virtual async ValueTask<bool> CheckLockedAsync(WebDavPath uri, CancellationToken cancellationToken = default)
     {
         await EnsureLocksAsync(uri, cancellationToken);
         return lockCache[uri].Count > 0;
@@ -161,7 +165,7 @@ internal abstract class RequestHandler : IRequestHandler
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the token was submitted and was matched against the uri or the uri was not locked, otherwise false.</returns>
     protected async ValueTask<bool> ValidateTokenAsync(
-        Uri uri,
+        WebDavPath uri,
         CancellationToken cancellationToken = default)
     {
         await EnsureLocksAsync(uri, cancellationToken);
@@ -172,7 +176,7 @@ internal abstract class RequestHandler : IRequestHandler
             if (WebDavHeaders.If.Count == 0)
                 return false;
             
-            IEnumerable<IfHeaderValueCondition> Matches(Uri? matchUri)
+            IEnumerable<IfHeaderValueCondition> Matches(WebDavPath? matchUri)
             {
                 foreach (var condition in WebDavHeaders.If)
                 {
@@ -188,7 +192,7 @@ internal abstract class RequestHandler : IRequestHandler
             var unlock = activeLocks
                 .Any(x => conditions
                     .Any(y => y.Tokens
-                        .Any(z => z.Value == x.Id.AbsoluteUri)));
+                        .Any(z => z.Value == x.Id.AbsolutePath)));
 
             return unlock;
         }
@@ -228,7 +232,7 @@ internal abstract class RequestHandler : IRequestHandler
         if (error)
             return false;
         
-        var itemName = item.Uri.GetRelativeUri(collection.Uri).LocalPath.TrimStart('/');
+        var itemName = item.Uri.GetRelativePath(collection.Uri).LocalPath.TrimStart('/');
         var status = await collection.DeleteItemAsync(itemName, cancellationToken);
         if (status != DavStatusCode.NoContent)
         {
@@ -244,8 +248,8 @@ internal abstract class RequestHandler : IRequestHandler
 
     private async ValueTask<bool> ValidatePreConditionsAsync(CancellationToken cancellationToken = default)
     {
-        var requestUri = Context.Request.Path.ToUri();
-        var items = new Dictionary<Uri, IStoreItem?>();
+        var requestUri = WebDavPath.FromUri(Context.Request.Path.ToUri());
+        var items = new Dictionary<WebDavPath, IStoreItem?>();
 
         if (WebDavHeaders.If.Count > 0)
         {
@@ -261,7 +265,7 @@ internal abstract class RequestHandler : IRequestHandler
                     var collection = await Store.GetCollectionAsync(parentUri, cancellationToken);
                     if (collection != null)
                     {
-                        var itemName = resourceUri.GetRelativeUri(collection.Uri).LocalPath.Trim('/');
+                        var itemName = resourceUri.GetRelativePath(collection.Uri).LocalPath.Trim('/');
                         if (string.IsNullOrWhiteSpace(itemName))
                         {
                             items[resourceUri] = collection;
@@ -303,8 +307,8 @@ internal abstract class RequestHandler : IRequestHandler
                     foreach (var stateToken in condition.Tokens)
                     {
                         var conditionResult = stateToken.Negate
-                            ? activeLocks.All(x => x.Id.AbsoluteUri != stateToken.Value)
-                            : activeLocks.Any(x => x.Id.AbsoluteUri == stateToken.Value);
+                            ? activeLocks.All(x => x.Id.AbsolutePath != stateToken.Value)
+                            : activeLocks.Any(x => x.Id.AbsolutePath == stateToken.Value);
 
                         if (!conditionResult)
                             return false;
@@ -426,7 +430,7 @@ internal abstract class RequestHandler : IRequestHandler
         return true;
     }
 
-    private async ValueTask EnsureLocksAsync(Uri uri, CancellationToken cancellationToken = default)
+    private async ValueTask EnsureLocksAsync(WebDavPath uri, CancellationToken cancellationToken = default)
     {
         if (!lockCache.ContainsKey(uri))
             lockCache[uri] = await LockManager.GetLocksAsync(uri, cancellationToken);

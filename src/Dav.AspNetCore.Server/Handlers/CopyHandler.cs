@@ -41,7 +41,7 @@ internal class CopyHandler : RequestHandler
         if (!string.IsNullOrWhiteSpace(Context.Request.PathBase))
         {
             if (Context.Request.PathBase.HasValue)
-                destination = new Uri(destination.LocalPath.Substring(Context.Request.PathBase.Value.Length));
+                destination = WebDavPath.FromString(destination.LocalPath.Substring(Context.Request.PathBase.Value.Length));
         }
         
         var overwrite = WebDavHeaders.Overwrite ?? false;
@@ -54,7 +54,7 @@ internal class CopyHandler : RequestHandler
             return;
         }
         
-        var destinationItemName = destination.GetRelativeUri(destinationParentUri).LocalPath.Trim('/');
+        var destinationItemName = destination.GetRelativePath(destinationParentUri).LocalPath.Trim('/');
         var destinationItem = await Store.GetItemAsync(destination, cancellationToken);
         if (destinationItem != null && !overwrite)
         {
@@ -114,7 +114,7 @@ internal class CopyHandler : RequestHandler
         ICollection<WebDavError> errors,
         CancellationToken cancellationToken = default)
     {
-        var destinationUri = UriHelper.Combine(destination.Uri, name);
+        var destinationUri = WebDavPath.Combine(destination.Uri, name);
         var isLocked = await CheckLockedAsync(destinationUri, cancellationToken);
         if (isLocked)
         {
@@ -154,7 +154,7 @@ internal class CopyHandler : RequestHandler
                 if (destinationCopy == null)
                     throw new InvalidOperationException("If the copied item is a collection, the copy result must also be a collection.");
                 
-                var itemName = subItem.Uri.GetRelativeUri(collection.Uri).LocalPath.TrimStart('/');
+                var itemName = subItem.Uri.GetRelativePath(collection.Uri).LocalPath.TrimStart('/');
                 var error = await CopyItemRecursiveAsync(subItem, destinationCopy, itemName, recursive, errors, cancellationToken);
                 if (!error)
                     subItemError = true;

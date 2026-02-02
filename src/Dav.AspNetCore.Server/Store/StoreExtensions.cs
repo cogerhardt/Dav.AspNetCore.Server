@@ -4,7 +4,7 @@ public static class StoreExtensions
 {
     public static async Task<IStoreCollection?> GetCollectionAsync(
         this IStore store, 
-        Uri uri, 
+        WebDavPath uri, 
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(store, nameof(store));

@@ -5,12 +5,12 @@ public abstract class FileStore : IStore
     /// <summary>
     /// Gets the item cache.
     /// </summary>
-    internal Dictionary<Uri, IStoreItem?> ItemCache { get; } = new();
+    internal Dictionary<WebDavPath, IStoreItem?> ItemCache { get; } = new();
 
     /// <summary>
     /// Gets the collection cache.
     /// </summary>
-    internal Dictionary<Uri, List<IStoreItem>> CollectionCache { get; } = new();
+    internal Dictionary<WebDavPath, List<IStoreItem>> CollectionCache { get; } = new();
     
     /// <summary>
     /// A value indicating whether caching will be disabled.
@@ -23,7 +23,7 @@ public abstract class FileStore : IStore
     /// <param name="uri">The uri.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The store item or null.</returns>
-    public async Task<IStoreItem?> GetItemAsync(Uri uri, CancellationToken cancellationToken = default)
+    public async Task<IStoreItem?> GetItemAsync(WebDavPath uri, CancellationToken cancellationToken = default)
     {
         if (ItemCache.TryGetValue(uri, out var cacheItem) && !DisableCaching)
             return cacheItem;
@@ -49,23 +49,23 @@ public abstract class FileStore : IStore
         return null;
     }
 
-    public abstract ValueTask<bool> DirectoryExistsAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask<bool> DirectoryExistsAsync(WebDavPath uri, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask<bool> FileExistsAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask<bool> FileExistsAsync(WebDavPath uri, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask DeleteDirectoryAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask DeleteDirectoryAsync(WebDavPath uri, CancellationToken cancellationToken = default);
     
-    public abstract ValueTask DeleteFileAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask DeleteFileAsync(WebDavPath uri, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask<DirectoryProperties> GetDirectoryPropertiesAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask<DirectoryProperties> GetDirectoryPropertiesAsync(WebDavPath uri, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask<FileProperties> GetFilePropertiesAsync(Uri uri, CancellationToken cancellationToken = default);
+    public abstract ValueTask<FileProperties> GetFilePropertiesAsync(WebDavPath uri, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask<Stream> OpenFileStreamAsync(Uri uri, OpenFileMode mode, CancellationToken cancellationToken = default);
+    public abstract ValueTask<Stream> OpenFileStreamAsync(WebDavPath uri, OpenFileMode mode, CancellationToken cancellationToken = default);
 
-    public abstract ValueTask CreateDirectoryAsync(Uri uri, CancellationToken cancellationToken);
+    public abstract ValueTask CreateDirectoryAsync(WebDavPath uri, CancellationToken cancellationToken);
 
-    public abstract ValueTask<Uri[]> GetFilesAsync(Uri uri, CancellationToken cancellationToken);
+    public abstract ValueTask<WebDavPath[]> GetFilesAsync(WebDavPath uri, CancellationToken cancellationToken);
     
-    public abstract ValueTask<Uri[]> GetDirectoriesAsync(Uri uri, CancellationToken cancellationToken);
+    public abstract ValueTask<WebDavPath[]> GetDirectoriesAsync(WebDavPath uri, CancellationToken cancellationToken);
 }

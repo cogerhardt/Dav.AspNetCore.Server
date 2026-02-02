@@ -80,8 +80,8 @@ internal static class HttpContextExtensions
     }
     
     public static Task SendLockedAsync(
-        this HttpContext context, 
-        Uri uri,
+        this HttpContext context,
+        WebDavPath uri,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));

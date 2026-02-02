@@ -43,7 +43,7 @@ public sealed class InMemoryLockManager : ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The lock result.</returns>
     public async ValueTask<LockResult> LockAsync(
-        Uri uri, 
+        WebDavPath uri, 
         LockType lockType, 
         XElement owner, 
         bool recursive, 
@@ -83,7 +83,7 @@ public sealed class InMemoryLockManager : ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The lock result.</returns>
     public ValueTask<LockResult> RefreshLockAsync(
-        Uri uri, 
+        WebDavPath uri,
         Uri token, 
         TimeSpan timeout, 
         CancellationToken cancellationToken = default)
@@ -117,7 +117,7 @@ public sealed class InMemoryLockManager : ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The status code.</returns>
     public ValueTask<DavStatusCode> UnlockAsync(
-        Uri uri, 
+        WebDavPath uri,
         Uri token, 
         CancellationToken cancellationToken = default)
     {
@@ -140,14 +140,14 @@ public sealed class InMemoryLockManager : ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of all active resource locks for the given store item.</returns>
     public ValueTask<IReadOnlyCollection<ResourceLock>> GetLocksAsync(
-        Uri uri, 
+        WebDavPath uri, 
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(uri, nameof(uri));
         
         var allActiveLocks = new List<ResourceLock>();
         var pathParts = uri.LocalPath.Split('/');
-        if (uri.AbsoluteUri.Equals("/"))
+        if (uri.AbsolutePath.Equals("/"))
             pathParts = new[] { "" };
             
         var currentPath = string.Empty;

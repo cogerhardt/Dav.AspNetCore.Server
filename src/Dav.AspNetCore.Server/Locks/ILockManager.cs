@@ -16,7 +16,7 @@ public interface ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The lock result.</returns>
     ValueTask<LockResult> LockAsync(
-        Uri uri,
+        WebDavPath uri,
         LockType lockType,
         XElement owner,
         bool recursive,
@@ -32,7 +32,7 @@ public interface ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The lock result.</returns>
     ValueTask<LockResult> RefreshLockAsync(
-        Uri uri,
+        WebDavPath uri,
         Uri token,
         TimeSpan timeout,
         CancellationToken cancellationToken = default);
@@ -45,7 +45,7 @@ public interface ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The status code.</returns>
     ValueTask<DavStatusCode> UnlockAsync(
-        Uri uri,
+        WebDavPath uri,
         Uri token,
         CancellationToken cancellationToken = default);
 
@@ -56,7 +56,7 @@ public interface ILockManager
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A list of all active resource locks for the given resource.</returns>
     ValueTask<IReadOnlyCollection<ResourceLock>> GetLocksAsync(
-        Uri uri, 
+        WebDavPath uri, 
         CancellationToken cancellationToken = default);
 
     /// <summary>

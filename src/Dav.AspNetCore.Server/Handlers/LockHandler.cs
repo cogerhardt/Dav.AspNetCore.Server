@@ -13,7 +13,7 @@ internal class LockHandler : RequestHandler
     /// <returns></returns>
     protected override async Task HandleRequestAsync(CancellationToken cancellationToken = default)
     {
-        var requestUri = Context.Request.Path.ToUri();
+        var requestUri = WebDavPath.FromUri(Context.Request.Path.ToUri());
         
         if (WebDavHeaders.Timeouts.Count == 0)
         {
@@ -57,7 +57,7 @@ internal class LockHandler : RequestHandler
                 cancellationToken);
 
             var activeLock = activeLocks
-                .FirstOrDefault(x => x.Uri == requestUri && condition.Tokens.Any(z => x.Id.AbsoluteUri == z.Value));
+                .FirstOrDefault(x => x.Uri == requestUri && condition.Tokens.Any(z => x.Id.AbsolutePath == z.Value));
             
             if (activeLock == null)
             {
@@ -139,7 +139,7 @@ internal class LockHandler : RequestHandler
     /// <param name="uri">The uri.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True when the uri is locked, otherwise false.</returns>
-    protected override async ValueTask<bool> CheckLockedAsync(Uri uri, CancellationToken cancellationToken = default)
+    protected override async ValueTask<bool> CheckLockedAsync(WebDavPath uri, CancellationToken cancellationToken = default)
     {
         // the default behavior would block the request when a lock exists
         // how ever in the lock handler we can still proceed if all of them are "shared"
@@ -162,7 +162,7 @@ internal class LockHandler : RequestHandler
             ? "Infinite"
             : $"Second-{resourceLock.Timeout.TotalSeconds:F0}");
 
-        var lockToken = new XElement(XmlNames.LockToken, new XElement(XmlNames.Href, resourceLock.Id.AbsoluteUri));
+        var lockToken = new XElement(XmlNames.LockToken, new XElement(XmlNames.Href, resourceLock.Id.AbsolutePath));
         var lockRoot = new XElement(XmlNames.LockRoot, new XElement(XmlNames.Href, $"{Context.Request.PathBase}{resourceLock.Uri.AbsolutePath}"));
         var activeLock = new XElement(XmlNames.ActiveLock, lockType, lockScope, depth, owner, timeout, lockToken, lockRoot);
         var lockDiscovery = new XElement(XmlNames.LockDiscovery, activeLock);
