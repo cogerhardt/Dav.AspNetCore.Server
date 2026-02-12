@@ -6,11 +6,17 @@ using Dav.AspNetCore.Server.Store;
 using Dav.AspNetCore.Server.Store.Properties;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using log4net;
 
 namespace Dav.AspNetCore.Server.Handlers;
 
 internal abstract class RequestHandler : IRequestHandler
 {
+    /// <summary>
+    /// Logger der Klasse RequestHandler.
+    /// </summary>
+    private static readonly ILog  logger = LogManager.GetLogger(typeof(RequestHandler));    
+
     private readonly Dictionary<WebDavPath, IReadOnlyCollection<ResourceLock>> lockCache = new();
     private IPropertyStore? propertyStore;
 
@@ -192,7 +198,7 @@ internal abstract class RequestHandler : IRequestHandler
             var unlock = activeLocks
                 .Any(x => conditions
                     .Any(y => y.Tokens
-                        .Any(z => z.Value == x.Id.AbsolutePath)));
+                        .Any(z => z.Value == x.Id.ToString())));
 
             return unlock;
         }
@@ -307,8 +313,12 @@ internal abstract class RequestHandler : IRequestHandler
                     foreach (var stateToken in condition.Tokens)
                     {
                         var conditionResult = stateToken.Negate
-                            ? activeLocks.All(x => x.Id.AbsolutePath != stateToken.Value)
-                            : activeLocks.Any(x => x.Id.AbsolutePath == stateToken.Value);
+                            ? activeLocks.All((x) => { 
+                                return x.Id.ToString() != stateToken.Value;
+                            })
+                            : activeLocks.Any((x) => { 
+                                return x.Id.ToString() == stateToken.Value; 
+                            });
 
                         if (!conditionResult)
                             return false;
@@ -392,7 +402,7 @@ internal abstract class RequestHandler : IRequestHandler
                         itemEtag = (string?)etagResult.Value;
                 }
 
-                if (requestHeaders.IfNoneMatch.Any(x => x.Tag == $"\"{itemEtag}\""))
+                if (requestHeaders.IfNoneMatch.Any(x => x.Tag == $"{itemEtag}"))
                 {
                     Context.SetResult(statusCode);
                     return false;

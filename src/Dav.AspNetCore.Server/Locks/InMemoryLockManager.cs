@@ -59,14 +59,16 @@ public sealed class InMemoryLockManager : ILockManager
             activeLocks.Count == 0)
         {
             var newLock = new ResourceLock(
-                new Uri($"urn:uuid:{Guid.NewGuid():D}"),
+                new Uri($"opaquelocktoken:{Guid.NewGuid():D}"),
                 uri,
                 lockType,
                 owner,
                 recursive,
                 timeout,
                 DateTime.UtcNow);
-                
+
+            Console.WriteLine($"Lock: {uri} - {newLock.Id}");
+
             locks.TryAdd(newLock.Id, newLock);
             return new LockResult(DavStatusCode.Ok, newLock);
         }
@@ -123,8 +125,11 @@ public sealed class InMemoryLockManager : ILockManager
     {
         ArgumentNullException.ThrowIfNull(uri, nameof(uri));
         ArgumentNullException.ThrowIfNull(token, nameof(token));
-        
+
+        Console.WriteLine($"Unlock: {uri} - {token}");
+
         var activeLock = locks.Values.FirstOrDefault(x => x.Uri == uri && x.Id == token && x.IsActive);
+
         if (activeLock == null)
             return new ValueTask<DavStatusCode>(DavStatusCode.Conflict);
 

@@ -19,8 +19,9 @@ internal class OptionsHandler : IRequestHandler
         IStore store,
         CancellationToken cancellationToken = default)
     {
-        context.Response.Headers["DAV"] = new[] { "1", "2" };
-        context.Response.Headers["Allow"] = new StringValues(new[]
+        context.Response.Headers["MS-Author-Via"] = "DAV";
+        context.Response.Headers["DAV"] = String.Join(", ", new[] { "1", "2" });
+        context.Response.Headers["Allow"] = String.Join(", ", new[]
         {
             WebDavMethods.Options,
             WebDavMethods.Head,

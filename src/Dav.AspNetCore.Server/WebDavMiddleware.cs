@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using log4net;
+using System.Text;
 
 namespace Dav.AspNetCore.Server;
 
@@ -11,6 +13,8 @@ internal class WebDavMiddleware
 {
     private readonly WebDavOptions webDavOptions;
     private readonly ILogger<WebDavMiddleware> logger;
+
+    private static readonly ILog log = LogManager.GetLogger(typeof(WebDavMiddleware));
 
     private static readonly string DefaultServerName = $"Dav.AspNetCore.Server/{typeof(WebDavMiddleware).Assembly.GetName().Version}";
 
@@ -37,6 +41,15 @@ internal class WebDavMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         var middlewareStart = DateTime.UtcNow;
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.AppendLine("[RequestHeaders]");
+        foreach (var current in context.Request.Headers)
+        {
+            builder.AppendLine($"{current.Key} = {current.Value}");
+        }
+        builder.AppendLine();
 
         if (webDavOptions.RequiresAuthentication &&
             context.Request.Method != WebDavMethods.Options &&
@@ -75,7 +88,18 @@ internal class WebDavMiddleware
             if (!context.Response.HasStarted)
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
         }
-        
+
+        builder.AppendLine("[ResponseHeaders]");
+        foreach (var current in context.Response.Headers)
+        {
+            builder.AppendLine($"{current.Key} = {current.Value}");
+        }
+        builder.AppendLine();
+        builder.AppendLine();
+
+        log.Info($"Request finished {context.Request.Method} {context.Request.Path} {context.Response.StatusCode} {(DateTime.UtcNow - middlewareStart).TotalMilliseconds:F0}ms");
+        log.Info(builder.ToString());
+
         logger.LogInformation($"Request finished {context.Request.Method} {context.Request.Path} {context.Response.StatusCode} {(DateTime.UtcNow - middlewareStart).TotalMilliseconds:F0}ms");
     }
 }

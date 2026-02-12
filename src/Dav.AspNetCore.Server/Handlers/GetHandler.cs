@@ -1,7 +1,8 @@
-using System.Xml.Linq;
 using Dav.AspNetCore.Server.Http;
 using Dav.AspNetCore.Server.Store;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using System.Xml.Linq;
 
 namespace Dav.AspNetCore.Server.Handlers;
 
@@ -19,6 +20,8 @@ internal class GetHandler : RequestHandler
             Context.SetResult(DavStatusCode.NotFound);
             return;
         }
+
+        Context.Response.Headers["MS-Author-Via"] = "DAV";
 
         var contentType = await GetNonExpensivePropertyAsync(Item, XmlNames.GetContentType, cancellationToken);
         if (!string.IsNullOrWhiteSpace(contentType))
@@ -76,7 +79,7 @@ internal class GetHandler : RequestHandler
                 disableRanges = true;
             }
         }
-
+        
         await SendDataAsync(Context, readableStream, disableRanges, cancellationToken);
     }
 

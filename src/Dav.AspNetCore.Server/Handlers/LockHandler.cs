@@ -1,11 +1,19 @@
 using System.Xml.Linq;
 using Dav.AspNetCore.Server.Http.Headers;
 using Dav.AspNetCore.Server.Locks;
+using log4net;
+using log4net.Repository.Hierarchy;
+using Microsoft.AspNetCore.Http;
 
 namespace Dav.AspNetCore.Server.Handlers;
 
 internal class LockHandler : RequestHandler
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    private static readonly ILog logger = LogManager.GetLogger(typeof(LockHandler));
+
     /// <summary>
     /// Handles the web dav request async.
     /// </summary>
@@ -128,6 +136,11 @@ internal class LockHandler : RequestHandler
             Context.SetResult(result.StatusCode);
             return;
         }
+
+        //logger.Info($"Lock ID: {result.ResourceLock.Id.ToString()}");
+
+        Context.Response.Headers.Append("Lock-Token", $"<{result.ResourceLock.Id.ToString()}>");
+        Context.Response.Headers.Append("Timeout", $"Second-{result.ResourceLock.Timeout.TotalSeconds}");
 
         var document = BuildDocument(result.ResourceLock);
         await Context.WriteDocumentAsync(DavStatusCode.Ok, document, cancellationToken);

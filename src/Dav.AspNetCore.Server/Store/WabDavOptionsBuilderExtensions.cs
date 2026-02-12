@@ -21,7 +21,7 @@ public static class WabDavOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         builder.AddStore<LocalFileStoreOptions, LocalFileStore>(configureOptions);
-
+        
         Directory.RegisterProperties();
         File.RegisterProperties();
         
