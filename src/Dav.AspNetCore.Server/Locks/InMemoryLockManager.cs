@@ -126,8 +126,6 @@ public sealed class InMemoryLockManager : ILockManager
         ArgumentNullException.ThrowIfNull(uri, nameof(uri));
         ArgumentNullException.ThrowIfNull(token, nameof(token));
 
-        Console.WriteLine($"Unlock: {uri} - {token}");
-
         var activeLock = locks.Values.FirstOrDefault(x => x.Uri == uri && x.Id == token && x.IsActive);
 
         if (activeLock == null)

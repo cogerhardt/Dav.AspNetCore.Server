@@ -112,7 +112,7 @@ internal abstract class RequestHandler : IRequestHandler
 
         Collection = collection;
         Options = Context.RequestServices.GetRequiredService<WebDavOptions>();
-        PropertyManager = context.RequestServices.GetRequiredService<IPropertyManager>();
+        PropertyManager = Context.RequestServices.GetRequiredService<IPropertyManager>();
         LockManager = Context.RequestServices.GetRequiredService<ILockManager>();
         WebDavHeaders = context.Request.GetTypedWebDavHeaders();
 
